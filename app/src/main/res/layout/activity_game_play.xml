@@ -8,29 +8,13 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ON"
-        android:id="@+id/button2"
-        android:layout_alignParentTop="true"
+        android:text="End Game"
+        android:id="@+id/btnEnd"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="OFF"
-        android:id="@+id/button3"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Disconnect"
-        android:id="@+id/button4"
-        android:layout_alignParentBottom="true"
-        android:layout_alignLeft="@+id/locationType"
-        android:layout_alignStart="@+id/locationType" />
 
 
     <TextView
@@ -40,9 +24,8 @@
         android:text="Player"
         android:id="@+id/player"
         android:textSize="50sp"
-        android:layout_below="@+id/button2"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="31dp" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -61,8 +44,7 @@
         android:id="@+id/rollResult"
         android:textSize="50sp"
         android:layout_below="@+id/currentPosition"
-        android:layout_toRightOf="@+id/button2"
-        android:layout_toEndOf="@+id/button2" />
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -70,7 +52,7 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Updated Position (After Roll)"
         android:id="@+id/updatedPosition"
-        android:layout_below="@+id/rollResult"
+        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
     <TextView
@@ -90,9 +72,8 @@
         android:text="Recognized speech"
         android:id="@+id/recognizedSpeech"
         android:layout_below="@+id/locationType"
-        android:layout_alignRight="@+id/currentPosition"
-        android:layout_alignEnd="@+id/currentPosition"
-        android:layout_marginTop="36dp" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="54dp" />
 
     <TextView
         android:layout_width="wrap_content"

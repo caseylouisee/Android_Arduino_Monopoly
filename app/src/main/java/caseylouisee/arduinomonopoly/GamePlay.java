@@ -37,10 +37,9 @@ import us.dicepl.android.sdk.responsedata.RollData;
 
 public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitListener, RecognitionListener {
 
-    Button btnOn, btnOff, btnDis;
+   // Button btnOn, btnOff,
+    Button btnEnd;
     String address = null;
-    String player1name = null;
-    String player2name = null;
     private ProgressDialog progress;
     BluetoothAdapter myBluetooth = null;
     BluetoothSocket btSocket = null;
@@ -136,6 +135,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
     */
     DiceResponseListener responseListener = new DiceResponseAdapter(){
 
+
         @Override
         public void onRoll(Die die, RollData rolls, Exception exception) {
             super.onRoll(die, rolls, exception);
@@ -155,6 +155,14 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
                 }
             }
 
+            player = (TextView) findViewById(R.id.player);
+            funds = (TextView) findViewById(R.id.funds);
+            currentPosition = (TextView) findViewById(R.id.currentPosition);
+            rollResult = (TextView) findViewById(R.id.rollResult);
+            updatedPosition = (TextView) findViewById(R.id.updatedPosition);
+            locationType = (TextView) findViewById(R.id.locationType);
+            recognizedSpeech = (TextView) findViewById(R.id.recognizedSpeech);
+
             GamePlay.this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -162,129 +170,127 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
                     Player currentPlayer = players.get(currentTurn);
                     int pos = currentPlayer.getCurrentPosition();
-                    player = (TextView) findViewById(R.id.player);
                     player.setText(currentPlayer.getName());
+
                     Log.d(method, "*****IT IS " + currentPlayer.getName().toUpperCase() + "'S TURN*****");
                     Log.d(method, "Current Position:" + pos + ", " + board.getSquare(pos).getName());
                     Log.d(method, "Current Funds: " + String.valueOf(currentPlayer.getMoney()));
 
-                    currentPosition = (TextView) findViewById(R.id.currentPosition);
-                    currentPosition.setText("Position before dice roll " + pos + ", " +
-                            board.getSquare(pos).getName());
-
-                    funds = (TextView) findViewById(R.id.funds);
                     funds.setText(String.valueOf(currentPlayer.getMoney()));
 
-                    rollResult = (TextView) findViewById(R.id.rollResult);
+                    currentPosition.setText("Position before dice roll " + pos + ", " + board.getSquare(pos).getName());
+
                     rollResult.setText("" + face);
 
-                    updatedPosition = (TextView) findViewById(R.id.updatedPosition);
                     updatedPosition.setText("Updated Position:");
 
-                    locationType = (TextView) findViewById(R.id.locationType);
                     locationType.setText("");
 
-                    currentPosition = (TextView) findViewById(R.id.currentPosition);
-                    currentPosition.setText("Position before dice roll " + pos + ", " +
-                            board.getSquare(pos).getName());
-
-                    recognizedSpeech = (TextView) findViewById(R.id.recognizedSpeech);
                     recognizedSpeech.setText("");
 
                     if (currentPlayer.getJail() == true) {
-                        if (face == 6) {
-                            convertTextToSpeech("You rolled a" + face);
-                            convertTextToSpeech("You are now free, resume normal play on next turn");
-                            currentPlayer.setJail(false);
-                            nextTurnRoll();
-                        } else {
-                            convertTextToSpeech("You rolled a" + face);
-                            convertTextToSpeech("You did not roll a 6, serve your sentence");
-                            jailCount++;
-                            if(jailCount==3){
-                                currentPlayer.setJail(false);
-                                convertTextToSpeech("You have served your sentence. " +
-                                        "Resume normal play on next turn");
-                            }
-                            nextTurnRoll();
-                        }
+                        jailRoll(face, currentPlayer);
                     } else {
-                        convertTextToSpeech("Position before dice roll" + pos +
-                                board.getSquare(pos).getName());
-
-                        int newPos = pos + face;
-                        if (newPos >= 40) {
-                            newPos = newPos - 40;
-                        }
-
-                        currentPlayer.setCurrentPosition(newPos);
-
-                        updatedPosition = (TextView) findViewById(R.id.updatedPosition);
-                        updatedPosition.setText("Updated Position:" + newPos + ", " +
-                                board.getSquare(newPos).getName());
-                        convertTextToSpeech("You rolled a" + face);
-
-                        convertTextToSpeech("Position after dice roll" + newPos +
-                                board.getSquare(newPos).getName());
-
-                        locationType = (TextView) findViewById(R.id.locationType);
-
-                        Square location = board.getSquare(newPos);
-                        //String posType = board.getSquare(newPos).getClass().getName();
-                        if (location instanceof PropertySquare) {
-                            locationType.setText("Landed on property");
-                            buyProperty(currentPlayer, location);
-                        } else if (location instanceof CardSquare) {
-                            locationType.setText("Take a Card");
-                            convertTextToSpeech("Take a card");
-                            String locName = location.getName();
-                            if(locName.equals("Chance")){
-                                chance(currentPlayer);
-                            } else {
-                                communityChest(currentPlayer);
-                            }
-                            nextTurnRoll();
-                        } else if (location instanceof SpecialSquare) {
-                            locationType.setText("Landed on special square");
-                            String locName = location.getName();
-                            if(locName.equals("Go To Jail")){
-                                setJail(currentPlayer);
-                                nextTurnRoll();
-                            } else if (locName.equals("Income Tax")){
-                                currentPlayer.subtractMoney(100);
-                                funds.setText(String.valueOf(currentPlayer.getMoney()));
-                                convertTextToSpeech("100 has been deducted from your funds");
-                                Log.d("income tax subtract 100", currentPlayer.getName() +
-                                        String.valueOf(currentPlayer.getMoney()));
-                                freeParking += 100;
-                                Log.d("income tax", "Free parking:" + String.valueOf(freeParking));
-                                nextTurnRoll();
-                            } else if (locName.equals("Jail")){
-                                convertTextToSpeech("Just visiting");
-                                nextTurnRoll();
-                            } else if (locName.equals("Super Tax")){
-                                convertTextToSpeech("300 has been deducted from your funds");
-                                currentPlayer.subtractMoney(300);
-                                funds.setText(String.valueOf(currentPlayer.getMoney()));
-                                Log.d("super tax subtract 300", currentPlayer.getName() +
-                                        String.valueOf(currentPlayer.getMoney()));
-                                freeParking += 300;
-                                Log.d("super tax", "Free parking:" + String.valueOf(freeParking));
-                                nextTurnRoll();
-                            } else {
-                                convertTextToSpeech("Special square");
-                                nextTurnRoll();
-                            }
-                        }
+                        normalRoll(face, pos, currentPlayer);
                     }
                 }
             });
         }
     };
 
+    private void normalRoll(int face, int pos, Player currentPlayer){
+
+        convertTextToSpeech("Position before dice roll" + pos +
+                board.getSquare(pos).getName());
+
+        int newPos = pos + face;
+        if (newPos >= 40) {
+            currentPlayer.addMoney(200);
+            convertTextToSpeech("You passed go and collected 200");
+            funds.setText(String.valueOf(currentPlayer.getMoney()));
+            newPos = newPos - 40;
+        }
+
+        currentPlayer.setCurrentPosition(newPos);
+
+        //updatedPosition = (TextView) findViewById(R.id.updatedPosition);
+        updatedPosition.setText("Updated Position:" + newPos + ", " + board.getSquare(newPos).getName());
+        convertTextToSpeech("You rolled a" + face);
+        convertTextToSpeech("Position after dice roll" + newPos + board.getSquare(newPos).getName());
+
+        locationType = (TextView) findViewById(R.id.locationType);
+
+        Square location = board.getSquare(newPos);
+        String locName = location.getName();
+
+        if (location instanceof PropertySquare) {
+            locationType.setText("Landed on property");
+            buyProperty(currentPlayer, location);
+        } else if (location instanceof CardSquare) {
+            locationType.setText("Take a Card");
+            convertTextToSpeech("Take a card");
+            if(locName.equals("Chance")){
+                chance(currentPlayer);
+            } else {
+                communityChest(currentPlayer);
+            }
+            nextTurnRoll();
+        } else if (location instanceof SpecialSquare) {
+            locationType.setText("Landed on special square");
+            specialSquare(locName, currentPlayer);
+        }
+    }
+
+    private void jailRoll(int face, Player currentPlayer){
+        if (face == 6) {
+            convertTextToSpeech("You rolled a" + face);
+            convertTextToSpeech("You are now free, resume normal play on next turn");
+            currentPlayer.setJail(false);
+            nextTurnRoll();
+        } else {
+            convertTextToSpeech("You rolled a" + face);
+            convertTextToSpeech("You did not roll a 6, serve your sentence");
+            jailCount++;
+            if(jailCount==3){
+                currentPlayer.setJail(false);
+                convertTextToSpeech("You have served your sentence. Resume normal play on next turn");
+            }
+            nextTurnRoll();
+        }
+    }
+
     private void setJail(Player currentPlayer){
         currentPlayer.setCurrentPosition(10);
         currentPlayer.setJail(true);
+    }
+
+    private void specialSquare(String locName, Player currentPlayer){
+        if(locName.equals("Go To Jail")){
+            setJail(currentPlayer);
+            nextTurnRoll();
+        } else if (locName.equals("Income Tax")){
+            currentPlayer.subtractMoney(100);
+            funds.setText(String.valueOf(currentPlayer.getMoney()));
+            convertTextToSpeech("100 has been deducted from your funds");
+            Log.d("income tax subtract 100", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+            freeParking += 100;
+            Log.d("income tax", "Free parking:" + String.valueOf(freeParking));
+            nextTurnRoll();
+        } else if (locName.equals("Jail")){
+            convertTextToSpeech("Just visiting");
+            nextTurnRoll();
+        } else if (locName.equals("Super Tax")){
+            convertTextToSpeech("300 has been deducted from your funds");
+            currentPlayer.subtractMoney(300);
+            funds.setText(String.valueOf(currentPlayer.getMoney()));
+            Log.d("super tax subtract 300", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+            freeParking += 300;
+            Log.d("super tax", "Free parking:" + String.valueOf(freeParking));
+            nextTurnRoll();
+        } else {
+            convertTextToSpeech("Special square");
+            nextTurnRoll();
+        }
     }
 
     private void chance(Player currentPlayer) {
@@ -304,8 +310,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             currentPlayer.subtractMoney(300);
             funds.setText(String.valueOf(currentPlayer.getMoney()));
             freeParking += 300;
-            Log.d("chance subtract 300", currentPlayer.getName() +
-                    String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance subtract 300", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
             Log.d("chance free parking", String.valueOf(freeParking));
         }
     }
@@ -323,39 +328,68 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         if(randomNum == 1){
             convertTextToSpeech("Your new business takes off, collect 200");
 
-            Log.d("chance add 200", currentPlayer.getName() +
-                    String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 200", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
             currentPlayer.addMoney(200);
             funds.setText(String.valueOf(currentPlayer.getMoney()));
-            Log.d("chance add 200", currentPlayer.getName() +
-                    String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 200", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
         }
         if(randomNum == 2){
-            convertTextToSpeech("Your friend hires your villa for a week, " +
-                    "collect 100 off the next player");
+            convertTextToSpeech("Your friend hires your villa for a week, collect 100 off the next player");
 
-            Log.d("chance add 100", currentPlayer.getName() +
-                    String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 100", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
             currentPlayer.addMoney(100);
             funds.setText(String.valueOf(currentPlayer.getMoney()));
-            Log.d("chance add 100", currentPlayer.getName() +
-                    String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 100", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
 
-            Log.d("chance subtract 100", players.get(nextPlayer).getName() +
-                    String.valueOf(players.get(nextPlayer).getMoney()));
+            Log.d("chance subtract 100", players.get(nextPlayer).getName() + String.valueOf(players.get(nextPlayer).getMoney()));
             players.get(nextPlayer).subtractMoney(100);
-            Log.d("chance subtract 100", players.get(nextPlayer).getName() +
-                    String.valueOf(players.get(nextPlayer).getMoney()));
+            Log.d("chance subtract 100", players.get(nextPlayer).getName() + String.valueOf(players.get(nextPlayer).getMoney()));
         }
         if(randomNum == 3){
             convertTextToSpeech("You recieve a tax rebate, collect 300");
 
-            Log.d("chance add 300", currentPlayer.getName() +
-                    String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 300", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
             currentPlayer.addMoney(300);
             funds.setText(String.valueOf(currentPlayer.getMoney()));
-            Log.d("chance add 300", currentPlayer.getName() +
+            Log.d("chance add 300", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+        }
+    }
+
+    private void buyProperty(Player currentPlayer, Square location) {
+        String method = "buyProperty";
+        PropertySquare square = (PropertySquare)location;
+
+        recognizedSpeech.setText("");
+        if(square.getOwned()==true){
+            convertTextToSpeech(square.getOwnedBy() + "call rent");
+            //rent is subtracted and added
+            currentPlayer.subtractMoney(100);
+            funds.setText(String.valueOf(currentPlayer.getMoney()));
+
+            Log.d(method + "rent subtract money", currentPlayer.getName() +
                     String.valueOf(currentPlayer.getMoney()));
+
+            String owner = square.getOwnedBy();
+            for(int i = 0; i<numPlayers; i++){
+                if(players.get(i).getName().equals(owner)){
+                    players.get(i).addMoney(100);
+                    Log.d(method + "rent add money", players.get(i).getName() + String.valueOf(players.get(i).getMoney()));
+                }
+            }
+            nextTurnRoll();
+
+        } else {
+            int price = ((PropertySquare) location).getPrice();
+            convertTextToSpeech("Would you like to buy" + square.getName() + "for" + price);
+            Log.d(method, currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+
+            while (tts.isSpeaking()) {
+                speech = null;
+            }
+            speech = SpeechRecognizer.createSpeechRecognizer(this);
+            speech.setRecognitionListener(this);
+            speech.startListening(getIntent());
+
         }
     }
 
@@ -380,29 +414,11 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         //view of the ledControl
         setContentView(R.layout.activity_game_play);
 
-        //call the widgtes
-        btnOn = (Button)findViewById(R.id.button2);
-        btnOff = (Button)findViewById(R.id.button3);
-        btnDis = (Button)findViewById(R.id.button4);
+        btnEnd = (Button)findViewById(R.id.btnEnd);
 
         new ConnectBT().execute(); //Call the class to connect
 
-        //commands to be sent to bluetooth
-        btnOn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                turnOnLed();      //method to turn on
-            }
-        });
-
-        btnOff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                turnOffLed();   //method to turn off
-            }
-        });
-
-        btnDis.setOnClickListener(new View.OnClickListener() {
+        btnEnd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Disconnect(); //close connection
@@ -422,7 +438,6 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
         String player1name = intent.getStringExtra(MainActivity.PLAYER1);
         String player2name = intent.getStringExtra(MainActivity.PLAYER2);
-
 
         Player player1 = new Player(player1name);
         Player player2 = new Player(player2name);
@@ -455,49 +470,6 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
         BluetoothManipulator.startScan();
 
-    }
-
-    private void buyProperty(Player currentPlayer, Square location) {
-        String method = "buyProperty";
-        recognizedSpeech = (TextView) findViewById(R.id.recognizedSpeech);
-        funds = (TextView) findViewById(R.id.funds);
-        PropertySquare square = (PropertySquare)location;
-
-        recognizedSpeech.setText("");
-        if(square.getOwned()==true){
-            convertTextToSpeech(square.getOwnedBy() + "call rent");
-            //rent is subtracted and added
-            currentPlayer.subtractMoney(100);
-            funds.setText(String.valueOf(currentPlayer.getMoney()));
-
-            Log.d(method + "rent subtract money", currentPlayer.getName() +
-                    String.valueOf(currentPlayer.getMoney()));
-
-            String owner = square.getOwnedBy();
-            for(int i = 0; i<numPlayers; i++){
-                if(players.get(i).getName().equals(owner)){
-                    players.get(i).addMoney(100);
-                    Log.d(method + "rent add money", players.get(i).getName() +
-                            String.valueOf(players.get(i).getMoney()));
-
-                }
-            }
-            nextTurnRoll();
-
-        } else {
-            int price = ((PropertySquare) location).getPrice();
-            convertTextToSpeech("Would you like to buy" + square.getName() + "for"
-                    + price);
-            Log.d(method, currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
-
-            while (tts.isSpeaking()) {
-                speech = null;
-            }
-            speech = SpeechRecognizer.createSpeechRecognizer(this);
-            speech.setRecognitionListener(this);
-            speech.startListening(getIntent());
-
-        }
     }
 
     @Override
