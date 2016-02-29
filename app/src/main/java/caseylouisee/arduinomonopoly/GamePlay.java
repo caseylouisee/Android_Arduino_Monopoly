@@ -16,7 +16,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +39,8 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
     Button btnOn, btnOff, btnDis;
     String address = null;
+    String player1name = null;
+    String player2name = null;
     private ProgressDialog progress;
     BluetoothAdapter myBluetooth = null;
     BluetoothSocket btSocket = null;
@@ -417,8 +418,14 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         players = new ArrayList<>();
         currentTurn = 0;
 
-        Player player1 = new Player("Casey");
-        Player player2 = new Player("Jon");
+        Intent intent = getIntent();
+
+        String player1name = intent.getStringExtra(MainActivity.PLAYER1);
+        String player2name = intent.getStringExtra(MainActivity.PLAYER2);
+
+
+        Player player1 = new Player(player1name);
+        Player player2 = new Player(player2name);
         players.add(player1);
         players.add(player2);
         numPlayers = players.size();
