@@ -346,7 +346,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             Log.d("chance subtract 100", players.get(nextPlayer).getName() + String.valueOf(players.get(nextPlayer).getMoney()));
         }
         if(randomNum == 3){
-            convertTextToSpeech("You recieve a tax rebate, collect 300");
+            convertTextToSpeech("You receive a tax rebate, collect 300");
 
             Log.d("chance add 300", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
             currentPlayer.addMoney(300);
@@ -438,11 +438,22 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
         String player1name = intent.getStringExtra(MainActivity.PLAYER1);
         String player2name = intent.getStringExtra(MainActivity.PLAYER2);
-
         Player player1 = new Player(player1name);
         Player player2 = new Player(player2name);
         players.add(player1);
         players.add(player2);
+
+        if(intent.getExtras().size()>3){
+            String player3name = intent.getStringExtra(MainActivity.PLAYER3);
+            Player player3 = new Player(player3name);
+            players.add(player3);
+        }
+        if(intent.getExtras().size()>4){
+            String player4name = intent.getStringExtra(MainActivity.PLAYER4);
+            Player player4 = new Player(player4name);
+            players.add(player4);
+        }
+
         numPlayers = players.size();
 
         Log.d(method, "*****START GAME*****");

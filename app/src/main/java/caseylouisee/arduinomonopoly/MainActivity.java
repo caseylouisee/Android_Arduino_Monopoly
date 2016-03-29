@@ -18,12 +18,17 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     Button btnPlay;
+    Button btnAddPlayer;
+    Button btnRemovePlayer;
 
     //Bluetooth
     private BluetoothAdapter myBluetooth = null;
     public static String EXTRA_ADDRESS = "device_address";
     public static String PLAYER1 = "Player 1";
     public static String PLAYER2 = "Player 2";
+    public static String PLAYER3 = "Player 3";
+    public static String PLAYER4 = "Player 4";
+    int playerCount = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         btnPlay = (Button) findViewById(R.id.btnPlay);
+        btnAddPlayer = (Button) findViewById(R.id.btnAddPlayer);
+        btnRemovePlayer = (Button) findViewById(R.id.btnRemovePlayer);
 
         //if the device has bluetooth
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
@@ -46,6 +53,36 @@ public class MainActivity extends AppCompatActivity {
             Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(turnBTon, 1);
         }
+
+        btnAddPlayer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EditText editText3 = (EditText) findViewById(R.id.editText3);
+                EditText editText4 = (EditText) findViewById(R.id.editText4);
+                if(playerCount==2){
+                    editText3.setVisibility(View.VISIBLE);
+                    playerCount++;
+                } else if(playerCount==3){
+                    editText4.setVisibility(View.VISIBLE);
+                    playerCount++;
+                }
+            }
+        });
+
+        btnRemovePlayer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EditText editText3 = (EditText) findViewById(R.id.editText3);
+                EditText editText4 = (EditText) findViewById(R.id.editText4);
+                if(playerCount==4){
+                    editText4.setVisibility(View.INVISIBLE);
+                    playerCount--;
+                } else if(playerCount==3){
+                    editText3.setVisibility(View.INVISIBLE);
+                    playerCount--;
+                }
+            }
+        });
 
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,6 +112,18 @@ public class MainActivity extends AppCompatActivity {
 
                             i.putExtra(PLAYER1, player1);
                             i.putExtra(PLAYER2, player2);
+
+                            EditText p3 = (EditText) findViewById(R.id.editText3);
+                            EditText p4 = (EditText) findViewById(R.id.editText4);
+                            if(p3.getVisibility()==View.VISIBLE) {
+                                String player3 = p3.getText().toString();
+                                i.putExtra(PLAYER3, player3);
+                            }
+
+                            if(p4.getVisibility()==View.VISIBLE){
+                                String player4 = p4.getText().toString();
+                                i.putExtra(PLAYER4, player4);
+                            }
 
                             startActivity(i);
                         }
