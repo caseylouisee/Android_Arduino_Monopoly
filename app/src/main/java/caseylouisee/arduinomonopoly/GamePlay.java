@@ -34,50 +34,160 @@ import us.dicepl.android.sdk.DiceScanningListener;
 import us.dicepl.android.sdk.Die;
 import us.dicepl.android.sdk.responsedata.RollData;
 
-
+/**
+ * GamePlay class extends AppCompatActivity
+ * implements TextToSpeech.OnInitListener and RecognitionListener
+ * Created by Casey Denner
+ */
 public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitListener, RecognitionListener {
 
-   // Button btnOn, btnOff,
+    /**
+     * "End Game" button on the application
+     */
     Button btnEnd;
+
+    /**
+     * String holding the connected device's mac address
+     */
     String address = null;
+
+    /**
+     * ProgressDialog
+     */
     private ProgressDialog progress;
-    BluetoothAdapter myBluetooth = null;
+
+    /**
+     * Bluetooth adapter
+     */
+    BluetoothAdapter m_Bluetooth = null;
+
+    /**
+     * Bluetooth socket
+     */
     BluetoothSocket btSocket = null;
+
+    /**
+     * Boolean to check whether bluetooth is connected to a device
+     */
     private boolean isBtConnected = false;
-    //SPP UUID. Look for it
+
+    /**
+     * SPP UUID. Look for it
+     */
     static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    private static final int[] developerKey = new int[] {0x5e, 0x77, 0x68, 0xd3, 0xc6, 0xa0, 0x17, 0x0a};
-    //String text = developerKey.toString();
+    /**
+     * Dice+ developer key needed to make connection to dice
+     */
+    private static final int[] developerKey = new int[]
+            {0x5e, 0x77, 0x68, 0xd3, 0xc6, 0xa0, 0x17, 0x0a};
+
+    /**
+     * String CONSTANT Tag used for logs and error checking
+     */
     private static final String TAG = "DICEPlus";
+
+    /**
+     * Die object containing the Dice+
+     */
     private Die dicePlus;
 
+    /**
+     * TextView on the application containing the player's name
+     */
     TextView player;
+
+    /**
+     * TextView on the application containing the dice roll
+     */
     TextView rollResult;
+
+    /**
+     * TextView on the application containing the player's current position details
+     */
     TextView currentPosition;
+
+    /**
+     * TextView on the application containing the player's updated position after the dice roll
+     */
     TextView updatedPosition;
+
+    /**
+     * TextView on the application containing the type of square the player landed on
+     */
     TextView locationType;
+
+    /**
+     * TextView on the application containing the recognized speech spoken by the user after
+     * using speech recognition
+     */
     TextView recognizedSpeech;
+
+    /**
+     * TextView on the application containing the player's funds
+     */
     TextView funds;
 
-    int currentTurn;
+    /**
+     * int representing the current player's turn
+     */
+    int m_currentTurn;
+
+    /**
+     * ArrayList containing all Players
+     */
     ArrayList<Player> players;
-    int numPlayers;
-    Board board;
-    int jailCount;
-    int freeParking;
-    private TextToSpeech tts;
 
-    private SpeechRecognizer speech = null;
+    /**
+     * int holding the number of players in the game
+     */
+    int m_numPlayers;
 
+    /**
+     * Board object used within the game
+     */
+    Board m_board;
+
+    /**
+     * int representing the number of rolls a player has had whilst in jail
+     */
+    int m_jailCount;
+
+    /**
+     * int containing the freeParking funds collected through taxes on the board
+     */
+    int m_freeParking;
+
+    /**
+     * TextToSpeech object used to translate text to speech using the Android Speech Engine
+     */
+    private TextToSpeech m_tts;
+
+    /**
+     * SpeechRecognizer object used to recognize input speech from players during play
+     */
+    private SpeechRecognizer m_speech = null;
+
+    /**
+     * Method that converts text to speech given text using the Android TextToSpeech function.
+     * @param text that is used to turn into speech.
+     */
     private void convertTextToSpeech(String text) {
         if (null == text || "".equals(text)) {
             text = "Please give some input.";
         }
-        tts.speak(text, TextToSpeech.QUEUE_ADD, null);
+        m_tts.speak(text, TextToSpeech.QUEUE_ADD, null);
     }
 
+    /**
+     * DiceScanningListener that scans for the Dice+ to connect
+     */
     DiceScanningListener scanningListener = new DiceScanningListener() {
+
+        /**
+         * Method called when a Dice+ is found
+         * @param die
+         */
         @Override
         public void onNewDie(Die die) {
             Log.d(TAG, "New DICE+ found");
@@ -85,17 +195,28 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             DiceController.connect(dicePlus);
         }
 
+        /**
+         * Method called when a scan is started
+         */
         @Override
         public void onScanStarted() {
             Log.d(TAG, "Scan Started");
         }
 
+        /**
+         * Method called when a scan for a Dice+ fails.
+         * Scan is then restarted if the initial one failed.
+         */
         @Override
         public void onScanFailed() {
             Log.d(TAG, "Scan Failed");
             BluetoothManipulator.startScan();
         }
 
+        /**
+         * Method called wehn the scan is complete.
+         * If no Dice+ has been located then another scan is initialised.
+         */
         @Override
         public void onScanFinished() {
             Log.d(TAG, "Scan Finished");
@@ -105,7 +226,16 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
     };
 
+    /**
+     * DiceConnectionListener that calls methods once a connection has been established/failed
+     */
     DiceConnectionListener connectionListener = new DiceConnectionListener() {
+
+        /**
+         * Method called when a connection to the Dice+ has been established.
+         * This method subscribes to the updates when the dice+ is rolled.
+         * @param die The Dice+ object that is connected
+         */
         @Override
         public void onConnectionEstablished(Die die) {
             Log.d(TAG, "DICE+ Connected");
@@ -113,6 +243,12 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             DiceController.subscribeRolls(dicePlus);
         }
 
+        /**
+         * Method called when the connection to the Dice+ fails.
+         * This method restarts the scan for a Dice+
+         * @param die the Dice+ object that failed to connect
+         * @param e Exception from the failed connection
+         */
         @Override
         public void onConnectionFailed(Die die, Exception e) {
             Log.d(TAG, "Connection failed", e);
@@ -120,6 +256,11 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             BluetoothManipulator.startScan();
         }
 
+        /**
+         * Method called if the connection to the Dice+ is lost.
+         * The dicePlus object is set to null and a scan is started.
+         * @param die the Dice+ object that has lost it's connection
+         */
         @Override
         public void onConnectionLost(Die die) {
             Log.d(TAG, "Connection lost");
@@ -135,7 +276,12 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
     */
     DiceResponseListener responseListener = new DiceResponseAdapter(){
 
-
+        /**
+         * Method called every time the dice is rolled
+         * @param die the Dice+ that the application is connected to
+         * @param rolls the roll data produced by the dice
+         * @param exception an exception if anything goes wrong during the roll
+         */
         @Override
         public void onRoll(Die die, RollData rolls, Exception exception) {
             super.onRoll(die, rolls, exception);
@@ -168,17 +314,20 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
                 public void run() {
                     String method = "onRoll";
 
-                    Player currentPlayer = players.get(currentTurn);
+                    Player currentPlayer = players.get(m_currentTurn);
                     int pos = currentPlayer.getCurrentPosition();
                     player.setText(currentPlayer.getName());
 
-                    Log.d(method, "*****IT IS " + currentPlayer.getName().toUpperCase() + "'S TURN*****");
-                    Log.d(method, "Current Position:" + pos + ", " + board.getSquare(pos).getName());
+                    Log.d(method, "*****IT IS " + currentPlayer.getName().toUpperCase()
+                            + "'S TURN*****");
+                    Log.d(method, "Current Position:" + pos + ", " +
+                            m_board.getSquare(pos).getName());
                     Log.d(method, "Current Funds: " + String.valueOf(currentPlayer.getMoney()));
 
                     funds.setText(String.valueOf(currentPlayer.getMoney()));
 
-                    currentPosition.setText("Position before dice roll " + pos + ", " + board.getSquare(pos).getName());
+                    currentPosition.setText("Position before dice roll " + pos + ", " +
+                            m_board.getSquare(pos).getName());
 
                     rollResult.setText("" + face);
 
@@ -198,10 +347,18 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
     };
 
+    /**
+     * Method called if the player has resulted in a normal roll, i.e. the player is not in jail.
+     * This method updates the textviews on the screen to represent the current player's
+     * information.
+     * @param face the number on the dice that has been rolled
+     * @param pos the position of the player before the dice roll
+     * @param currentPlayer the player that is currently in play
+     */
     private void normalRoll(int face, int pos, Player currentPlayer){
 
         convertTextToSpeech("Position before dice roll" + pos +
-                board.getSquare(pos).getName());
+                m_board.getSquare(pos).getName());
 
         int newPos = pos + face;
         if (newPos >= 40) {
@@ -214,13 +371,13 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         currentPlayer.setCurrentPosition(newPos);
 
         //updatedPosition = (TextView) findViewById(R.id.updatedPosition);
-        updatedPosition.setText("Updated Position:" + newPos + ", " + board.getSquare(newPos).getName());
+        updatedPosition.setText("Updated Position:" + newPos + ", " + m_board.getSquare(newPos).getName());
         convertTextToSpeech("You rolled a" + face);
-        convertTextToSpeech("Position after dice roll" + newPos + board.getSquare(newPos).getName());
+        convertTextToSpeech("Position after dice roll" + newPos + m_board.getSquare(newPos).getName());
 
         locationType = (TextView) findViewById(R.id.locationType);
 
-        Square location = board.getSquare(newPos);
+        Square location = m_board.getSquare(newPos);
         String locName = location.getName();
 
         if (location instanceof PropertySquare) {
@@ -241,6 +398,11 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
     }
 
+    /**
+     * This is the method that is called if the current player is in jail.
+     * @param face the number rolled on the dice
+     * @param currentPlayer the player who is currently in play
+     */
     private void jailRoll(int face, Player currentPlayer){
         if (face == 6) {
             convertTextToSpeech("You rolled a" + face);
@@ -250,8 +412,8 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         } else {
             convertTextToSpeech("You rolled a" + face);
             convertTextToSpeech("You did not roll a 6, serve your sentence");
-            jailCount++;
-            if(jailCount==3){
+            m_jailCount++;
+            if(m_jailCount==3){
                 currentPlayer.setJail(false);
                 convertTextToSpeech("You have served your sentence. Resume normal play on next turn");
             }
@@ -259,11 +421,21 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
     }
 
+    /**
+     * Method to set the player to be in jail.
+     * @param currentPlayer the current player
+     */
     private void setJail(Player currentPlayer){
         currentPlayer.setCurrentPosition(10);
         currentPlayer.setJail(true);
     }
 
+    /**
+     * Method called if the player lands on a special square. These include go to jail,
+     * income tax, jail and super tax.
+     * @param locName the square's name
+     * @param currentPlayer the player who is currently playing
+     */
     private void specialSquare(String locName, Player currentPlayer){
         if(locName.equals("Go To Jail")){
             setJail(currentPlayer);
@@ -273,8 +445,8 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             funds.setText(String.valueOf(currentPlayer.getMoney()));
             convertTextToSpeech("100 has been deducted from your funds");
             Log.d("income tax subtract 100", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
-            freeParking += 100;
-            Log.d("income tax", "Free parking:" + String.valueOf(freeParking));
+            m_freeParking += 100;
+            Log.d("income tax", "Free parking:" + String.valueOf(m_freeParking));
             nextTurnRoll();
         } else if (locName.equals("Jail")){
             convertTextToSpeech("Just visiting");
@@ -284,8 +456,8 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             currentPlayer.subtractMoney(300);
             funds.setText(String.valueOf(currentPlayer.getMoney()));
             Log.d("super tax subtract 300", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
-            freeParking += 300;
-            Log.d("super tax", "Free parking:" + String.valueOf(freeParking));
+            m_freeParking += 300;
+            Log.d("super tax", "Free parking:" + String.valueOf(m_freeParking));
             nextTurnRoll();
         } else {
             convertTextToSpeech("Special square");
@@ -293,6 +465,10 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
     }
 
+    /**
+     * This method is called if the player lands on a chance square
+     * @param currentPlayer the player currently in play
+     */
     private void chance(Player currentPlayer) {
         Random rand = new Random();
         int randomNum = rand.nextInt((3 - 1) + 1) + 1;
@@ -309,52 +485,73 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             convertTextToSpeech("Build a rooftop swimming pool on your apartment, pay 300");
             currentPlayer.subtractMoney(300);
             funds.setText(String.valueOf(currentPlayer.getMoney()));
-            freeParking += 300;
+            m_freeParking += 300;
             Log.d("chance subtract 300", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
-            Log.d("chance free parking", String.valueOf(freeParking));
+            Log.d("chance free parking", String.valueOf(m_freeParking));
         }
     }
 
+    /**
+     * This method is called if the player lands on a community chest square
+     * @param currentPlayer the player currently in play
+     */
     private void communityChest(Player currentPlayer){
         Random rand = new Random();
         int randomNum = rand.nextInt((3 - 1) + 1) + 1;
         int nextPlayer;
-        if(currentTurn >= numPlayers){
+        if(m_currentTurn >= m_numPlayers){
             nextPlayer = 0;
         } else {
-            nextPlayer = currentTurn+1;
+            nextPlayer = m_currentTurn+1;
         }
 
         if(randomNum == 1){
             convertTextToSpeech("Your new business takes off, collect 200");
 
-            Log.d("chance add 200", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 200", currentPlayer.getName() +
+                    String.valueOf(currentPlayer.getMoney()));
             currentPlayer.addMoney(200);
             funds.setText(String.valueOf(currentPlayer.getMoney()));
-            Log.d("chance add 200", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 200", currentPlayer.getName() +
+                    String.valueOf(currentPlayer.getMoney()));
         }
         if(randomNum == 2){
-            convertTextToSpeech("Your friend hires your villa for a week, collect 100 off the next player");
+            convertTextToSpeech("Your friend hires your villa for a week, " +
+                    "collect 100 off the next player");
 
-            Log.d("chance add 100", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 100", currentPlayer.getName() +
+                    String.valueOf(currentPlayer.getMoney()));
             currentPlayer.addMoney(100);
             funds.setText(String.valueOf(currentPlayer.getMoney()));
-            Log.d("chance add 100", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 100", currentPlayer.getName() +
+                    String.valueOf(currentPlayer.getMoney()));
 
-            Log.d("chance subtract 100", players.get(nextPlayer).getName() + String.valueOf(players.get(nextPlayer).getMoney()));
+            Log.d("chance subtract 100", players.get(nextPlayer).getName() +
+                    String.valueOf(players.get(nextPlayer).getMoney()));
             players.get(nextPlayer).subtractMoney(100);
-            Log.d("chance subtract 100", players.get(nextPlayer).getName() + String.valueOf(players.get(nextPlayer).getMoney()));
+            Log.d("chance subtract 100", players.get(nextPlayer).getName() +
+                    String.valueOf(players.get(nextPlayer).getMoney()));
         }
         if(randomNum == 3){
             convertTextToSpeech("You receive a tax rebate, collect 300");
 
-            Log.d("chance add 300", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 300", currentPlayer.getName() +
+                    String.valueOf(currentPlayer.getMoney()));
             currentPlayer.addMoney(300);
             funds.setText(String.valueOf(currentPlayer.getMoney()));
-            Log.d("chance add 300", currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
+            Log.d("chance add 300", currentPlayer.getName() +
+                    String.valueOf(currentPlayer.getMoney()));
         }
     }
 
+    /**
+     * This method is called if a player lands on a property.
+     * First it checks if the property is already owned. If it is the player who owns the property
+     * is told to call rent.
+     * If the property is not owned the player is asked if they would like to purchase the property.
+     * @param currentPlayer the player that is currently in play
+     * @param location the square the player has landed on
+     */
     private void buyProperty(Player currentPlayer, Square location) {
         String method = "buyProperty";
         PropertySquare square = (PropertySquare)location;
@@ -370,7 +567,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
                     String.valueOf(currentPlayer.getMoney()));
 
             String owner = square.getOwnedBy();
-            for(int i = 0; i<numPlayers; i++){
+            for(int i = 0; i<m_numPlayers; i++){
                 if(players.get(i).getName().equals(owner)){
                     players.get(i).addMoney(100);
                     Log.d(method + "rent add money", players.get(i).getName() + String.valueOf(players.get(i).getMoney()));
@@ -383,30 +580,38 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             convertTextToSpeech("Would you like to buy" + square.getName() + "for" + price);
             Log.d(method, currentPlayer.getName() + String.valueOf(currentPlayer.getMoney()));
 
-            while (tts.isSpeaking()) {
-                speech = null;
+            while (m_tts.isSpeaking()) {
+                m_speech = null;
             }
-            speech = SpeechRecognizer.createSpeechRecognizer(this);
-            speech.setRecognitionListener(this);
-            speech.startListening(getIntent());
+            m_speech = SpeechRecognizer.createSpeechRecognizer(this);
+            m_speech.setRecognitionListener(this);
+            m_speech.startListening(getIntent());
 
         }
     }
 
+    /**
+     * This method is called to prompt the next player to roll
+     */
     private void nextTurnRoll() {
         Log.d("nextTurnRoll", "next player please roll");
-        currentTurn++;
-        if(currentTurn >= numPlayers){
-            currentTurn = 0;
+        m_currentTurn++;
+        if(m_currentTurn >= m_numPlayers){
+            m_currentTurn = 0;
         }
-        convertTextToSpeech(players.get(currentTurn).getName() + "please roll the dice");
+        convertTextToSpeech(players.get(m_currentTurn).getName() + "please roll the dice");
     }
 
+    /**
+     * This method is called when the GamePlay screen is initialised from the intent on the
+     * main menu screen.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        tts = new TextToSpeech(this, this);
+        m_tts = new TextToSpeech(this, this);
 
         Intent newint = getIntent();
         address = newint.getStringExtra(MainActivity.EXTRA_ADDRESS); //receive the address of the bluetooth device
@@ -427,12 +632,15 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
     }
 
+    /**
+     * This is the method that initialises the games with the players and the board.
+     */
     public void game() {
 
         String method = "game";
-        board = new Board();
+        m_board = new Board();
         players = new ArrayList<>();
-        currentTurn = 0;
+        m_currentTurn = 0;
 
         Intent intent = getIntent();
 
@@ -454,21 +662,23 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             players.add(player4);
         }
 
-        numPlayers = players.size();
+        m_numPlayers = players.size();
 
         Log.d(method, "*****START GAME*****");
-        Log.d(method, "numPlayers: " + numPlayers);
+        Log.d(method, "numPlayers: " + m_numPlayers);
 
-        Player current = players.get(currentTurn);
+        Player current = players.get(m_currentTurn);
         int pos = current.getCurrentPosition();
         player = (TextView) findViewById(R.id.player);
         player.setText(current.getName());
         Log.d(method, "*****IT IS " + current.getName().toUpperCase() + "'S TURN*****");
-        Log.d(method, "Current Position:" + pos + ", " + board.getSquare(pos).getName());
+        Log.d(method, "Current Position:" + pos + ", " + m_board.getSquare(pos).getName());
 
         currentPosition = (TextView) findViewById(R.id.currentPosition);
-        currentPosition.setText("Current Position: " + pos + ", " + board.getSquare(pos).getName());
-        convertTextToSpeech("Start Game" + players.get(currentTurn).getName() + "please roll the dice");
+        currentPosition.setText("Current Position: " + pos + ", " +
+                m_board.getSquare(pos).getName());
+        convertTextToSpeech("Start Game" + players.get(m_currentTurn).getName() +
+                "please roll the dice");
 
         // Initiating
         BluetoothManipulator.initiate(this);
@@ -483,26 +693,36 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
     }
 
+    /**
+     * This method is called when the TextToSpeech Engine is initialised
+     * @param code
+     */
     @Override
     public void onInit(int code) {
         if (code==TextToSpeech.SUCCESS) {
-            tts.setLanguage(Locale.getDefault());
+            m_tts.setLanguage(Locale.getDefault());
         } else {
-            tts = null;
+            m_tts = null;
             Toast.makeText(this, "Failed to initialize TTS engine.",
                     Toast.LENGTH_SHORT).show();
         }
     }
 
+    /**
+     * This method is called when the TextToSpeech Engine is shut down
+     */
     @Override
     protected void onDestroy() {
-        if (tts!=null) {
-            tts.stop();
-            tts.shutdown();
+        if (m_tts!=null) {
+            m_tts.stop();
+            m_tts.shutdown();
         }
         super.onDestroy();
     }
 
+    /**
+     * This method is called when the Speech Recognizer starts to listen for speech input
+     */
     @Override
     public void onBeginningOfSpeech() {
         Log.i("SRL", "onBeginningOfSpeech");
@@ -513,18 +733,25 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         Log.i("SRL", "onBufferReceived: " + buffer);
     }
 
+    /**
+     * This method is called after the speech input has been completed.
+     */
     @Override
     public void onEndOfSpeech() {
         Log.i("SRL", "onEndOfSpeech");
     }
 
+    /**
+     * This method is called if there has been an error during speech input
+     * @param errorCode
+     */
     @Override
     public void onError(int errorCode) {
         String errorMessage = getErrorText(errorCode);
         Log.d("SRL", "FAILED " + errorMessage);
-        speech = SpeechRecognizer.createSpeechRecognizer(this);
-        speech.setRecognitionListener(this);
-        speech.startListening(getIntent());
+        m_speech = SpeechRecognizer.createSpeechRecognizer(this);
+        m_speech.setRecognitionListener(this);
+        m_speech.startListening(getIntent());
     }
 
     @Override
@@ -532,16 +759,30 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         Log.i("SRL", "onEvent");
     }
 
+    /**
+     * This method is called if the speech recognizer thinks only partial speech was
+     * input/recognized
+     * @param arg0
+     */
     @Override
     public void onPartialResults(Bundle arg0) {
         Log.i("SRL", "onPartialResults");
     }
 
+    /**
+     * This method is called when the speech recognizer is ready for input
+     * @param arg0
+     */
     @Override
     public void onReadyForSpeech(Bundle arg0) {
         Log.i("SRL", "onReadyForSpeech");
     }
 
+    /**
+     * This method is called when the speech recognizer has recieved input and recognized it.
+     * It updates the recognized speech text view on the screen to show users what they have input.
+     * @param results the text that has been input
+     */
     @Override
     public void onResults(Bundle results) {
         recognizedSpeech = (TextView) findViewById(R.id.recognizedSpeech);
@@ -554,14 +795,15 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         recognizedSpeech.setText(text);
 
         if (recognizedSpeech.getText().toString().contains("yes")) {
-            PropertySquare square = (PropertySquare) (board.getSquare(players.get(currentTurn).getCurrentPosition()));
-            players.get(currentTurn).subtractMoney(square.getPrice());
-            square.setOwnedBy(players.get(currentTurn).getName());
+            PropertySquare square = (PropertySquare) (m_board.getSquare(
+                    players.get(m_currentTurn).getCurrentPosition()));
+            players.get(m_currentTurn).subtractMoney(square.getPrice());
+            square.setOwnedBy(players.get(m_currentTurn).getName());
             Log.d("buyProperty yes", square.getOwnedBy());
-            Log.d("buyProperty yes", players.get(currentTurn).getName() +
-                    String.valueOf(players.get(currentTurn).getMoney()));
+            Log.d("buyProperty yes", players.get(m_currentTurn).getName() +
+                    String.valueOf(players.get(m_currentTurn).getMoney()));
             convertTextToSpeech("You now own" + square.getName());
-            funds.setText(String.valueOf(players.get(currentTurn).getMoney()));
+            funds.setText(String.valueOf(players.get(m_currentTurn).getMoney()));
 
         }
         nextTurnRoll();
@@ -572,6 +814,11 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         Log.i("SRL", "onRmsChanged: " + rmsdB);
     }
 
+    /**
+     * This method returns what error was caused if the speech recgonizer throws an error code
+     * @param errorCode int representing the error thrown
+     * @return log message including error details
+     */
     public static String getErrorText(int errorCode) {
         String message;
         switch (errorCode) {
@@ -609,6 +856,9 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         return message;
     }
 
+    /**
+     * This method is launched when the application is resumed from previous gameplay
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -618,6 +868,9 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         //Game game = new Game();
     }
 
+    /**
+     * This method is called when the application is closed.
+     */
     @Override
     protected void onStop() {
         super.onStop();
@@ -631,6 +884,9 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         dicePlus = null;
     }
 
+    /**
+     * This method is called to disconnect from the bluetooth devices connected.
+     */
     private void Disconnect()
     {
         if (btSocket!=null) //If the btSocket is busy
@@ -646,6 +902,10 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
     }
 
+    /**
+     * This method sends a message to the arduino via bluetooth which in turn,
+     * turns off the LED light on the Arduino
+     */
     private void turnOffLed()
     {
         if (btSocket!=null)
@@ -661,6 +921,10 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
     }
 
+    /**
+     * This method sends a message to the bluetooth device (Arduino), which in turn, turns on the
+     * LED light.
+     */
     private void turnOnLed()
     {
         if (btSocket!=null)
@@ -676,7 +940,10 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
     }
 
-    // fast way to call Toast
+    /**
+     * This method provides a quicker way to create Toasts on the screen
+     * @param s the message to be included in the toast
+     */
     private void msg(String s)
     {
         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
@@ -704,48 +971,57 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * This method is called to connect to the bluetooth device (Arduino)
+     */
     private class ConnectBT extends AsyncTask<Void, Void, Void>  // UI thread
     {
         private boolean ConnectSuccess = true; //if it's here, it's almost connected
 
         @Override
-        protected void onPreExecute()
-        {
-            progress = ProgressDialog.show(GamePlay.this, "Connecting...", "Please wait!!!");  //show a progress dialog
+        protected void onPreExecute(){
+            //show a progress dialog
+            progress = ProgressDialog.show(GamePlay.this, "Connecting...", "Please wait!!!");
         }
 
+        /**
+         * This method is completed in the background to check connection to the bluetooth device
+         * @param devices
+         * @return
+         */
         @Override
-        protected Void doInBackground(Void... devices) //while the progress dialog is shown, the connection is done in background
-        {
-            try
-            {
-                if (btSocket == null || !isBtConnected)
-                {
-                    myBluetooth = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
-                    BluetoothDevice bluetoothDevice = myBluetooth.getRemoteDevice(address);//connects to the device's address and checks if it's available
-                    btSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(myUUID);//create a RFCOMM (SPP) connection
+        protected Void doInBackground(Void... devices){
+            try {
+                if (btSocket == null || !isBtConnected) {
+                    //get the mobile bluetooth device
+                    m_Bluetooth = BluetoothAdapter.getDefaultAdapter();
+                    //connects to the device's address and checks if it's available
+                    BluetoothDevice bluetoothDevice = m_Bluetooth.getRemoteDevice(address);
+                    //create a RFCOMM (SPP) connection
+                    btSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(myUUID);
                     BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
                     btSocket.connect();//start connection
                 }
             }
-            catch (IOException e)
-            {
+            catch (IOException e) {
                 ConnectSuccess = false;//if the try failed, you can check the exception here
             }
             return null;
         }
+
+        /**
+         * This method is completed after the doInBackground method to ensure everything is ok
+         * @param result result of doInBackground
+         */
         @Override
-        protected void onPostExecute(Void result) //after the doInBackground, it checks if everything went fine
-        {
+        protected void onPostExecute(Void result) {
             super.onPostExecute(result);
 
-            if (!ConnectSuccess)
-            {
+            if (!ConnectSuccess) {
                 msg("Connection Failed. Is it a SPP Bluetooth? Try again.");
                 finish();
             }
-            else
-            {
+            else {
                 msg("Connected.");
                 isBtConnected = true;
             }

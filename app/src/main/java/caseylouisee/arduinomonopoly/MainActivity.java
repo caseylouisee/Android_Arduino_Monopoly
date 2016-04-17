@@ -15,22 +15,67 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Set;
 
-
+/**
+ * MainActivity class extends AppCompatActivity
+ * Created by Casey Denner
+ */
 public class MainActivity extends AppCompatActivity {
-    //Test line github
+
+    /**
+     * "Play" button on the application
+     */
     Button btnPlay;
+
+    /**
+     * "Add Player" button on the application
+     */
     Button btnAddPlayer;
+
+    /**
+     * "Remove Player" button on the application
+     */
     Button btnRemovePlayer;
 
-    //Bluetooth
-    private BluetoothAdapter myBluetooth = null;
-    public static String EXTRA_ADDRESS = "device_address";
-    public static String PLAYER1 = "Player 1";
-    public static String PLAYER2 = "Player 2";
-    public static String PLAYER3 = "Player 3";
-    public static String PLAYER4 = "Player 4";
-    int playerCount = 2;
+    /**
+     * Bluetooth Adapter
+     */
+    private BluetoothAdapter m_Bluetooth = null;
 
+    /**
+     * String that holds the device mac address. Static to send through intent.
+     */
+    public static String EXTRA_ADDRESS = "device_address";
+
+    /**
+     * String that holds player 1's name. Static to send through intent.
+     */
+    public static String PLAYER1 = "Player 1";
+
+    /**
+     * String that holds player 2's name. Static to send through intent.
+     */
+    public static String PLAYER2 = "Player 2";
+
+    /**
+     * String that holds player 3's name. Static to send through intent.
+     */
+    public static String PLAYER3 = "Player 3";
+
+    /**
+     * String that holds player 4's name. Static to send through intent.
+     */
+    public static String PLAYER4 = "Player 4";
+
+    /**
+     * int representing the number of players
+     */
+    int m_playerCount = 2;
+
+    /**
+     * The first method that is called within the application.
+     * This method manages the buttons on the screen and holds the onClickListeners for them.
+     * @param savedInstanceState state of the application on last usage
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,15 +86,16 @@ public class MainActivity extends AppCompatActivity {
         btnRemovePlayer = (Button) findViewById(R.id.btnRemovePlayer);
 
         //if the device has bluetooth
-        myBluetooth = BluetoothAdapter.getDefaultAdapter();
+        m_Bluetooth = BluetoothAdapter.getDefaultAdapter();
 
-        if (myBluetooth == null) {
+        if (m_Bluetooth == null) {
             //Show a message. that the device has no bluetooth adapter
-            Toast.makeText(getApplicationContext(), "Bluetooth Device Not Available", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Bluetooth Device Not Available",
+                    Toast.LENGTH_LONG).show();
 
             //finish apk
             finish();
-        } else if (!myBluetooth.isEnabled()) {
+        } else if (!m_Bluetooth.isEnabled()) {
             //Ask to the user turn the bluetooth on
             Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(turnBTon, 1);
@@ -60,12 +106,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 EditText editText3 = (EditText) findViewById(R.id.editText3);
                 EditText editText4 = (EditText) findViewById(R.id.editText4);
-                if(playerCount==2){
+                if(m_playerCount==2){
                     editText3.setVisibility(View.VISIBLE);
-                    playerCount++;
-                } else if(playerCount==3){
+                    m_playerCount++;
+                } else if(m_playerCount==3){
                     editText4.setVisibility(View.VISIBLE);
-                    playerCount++;
+                    m_playerCount++;
                 }
             }
         });
@@ -75,12 +121,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 EditText editText3 = (EditText) findViewById(R.id.editText3);
                 EditText editText4 = (EditText) findViewById(R.id.editText4);
-                if(playerCount==4){
+                if(m_playerCount==4){
                     editText4.setVisibility(View.INVISIBLE);
-                    playerCount--;
-                } else if(playerCount==3){
+                    m_playerCount--;
+                } else if(m_playerCount==3){
                     editText3.setVisibility(View.INVISIBLE);
-                    playerCount--;
+                    m_playerCount--;
                 }
             }
         });
@@ -88,13 +134,14 @@ public class MainActivity extends AppCompatActivity {
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Set<BluetoothDevice> pairedDevices = myBluetooth.getBondedDevices();
+                Set<BluetoothDevice> pairedDevices = m_Bluetooth.getBondedDevices();
                 ArrayList list = new ArrayList();
 
+                // automatically connects to arduino device set up
                 if (pairedDevices.size() > 0) {
                     for (BluetoothDevice bt : pairedDevices) {
-                        // automatically connects to arduino device set up
-                        list.add(bt.getName() + "\n" + bt.getAddress()); //Get the device's name and the address
+                        //Get the device's name and the address
+                        list.add(bt.getName() + "\n" + bt.getAddress());
                         if ((bt.getName().equals("Arduino")) || (bt.getName().equals("HC-06"))) {
                             // Get the device MAC address, the last 17 chars in the View
                             String info = ("Arduino" + "\n" + bt.getAddress());
@@ -104,7 +151,8 @@ public class MainActivity extends AppCompatActivity {
                             Intent i = new Intent(MainActivity.this, GamePlay.class);
 
                             //Change the activity.
-                            i.putExtra(EXTRA_ADDRESS, address); //this will be received at ledControl (class) Activity
+                            //this will be received at ledControl (class) Activity
+                            i.putExtra(EXTRA_ADDRESS, address);
 
                             EditText p1 = (EditText) findViewById(R.id.editText);
                             String player1 = p1.getText().toString();
@@ -130,12 +178,18 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 } else {
-                    Toast.makeText(getApplicationContext(), "No Paired Bluetooth Devices Found.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "No Paired Bluetooth Devices Found.",
+                            Toast.LENGTH_LONG).show();
                 }
             }
         });
     }
 
+    /**
+     * Method that creates the menu options
+     * @param menu
+     * @return boolean true
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

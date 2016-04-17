@@ -3,23 +3,53 @@ package caseylouisee.arduinomonopoly;
 import java.util.ArrayList;
 
 /**
+ * Board class that initializes squares.
  * Created by Casey Denner on 26/10/2015.
  */
 public class Board {
 
+    /**
+     * ArrayList that holds all the squares on the board
+     */
     private static final ArrayList<Square> squares = new ArrayList<Square>(40);
 
 
+    /**
+     * Calls the initializeSquares method
+     */
     public Board() {
 
         initializeSquares();
 
     }
 
+    /**
+     * Method used to return the squares ArrayList
+     * @return squares an arraylist of all squares on the board
+     */
+    public ArrayList getSquares(){
+        return squares;
+    }
+
+    /**
+     * Method used to return the square given the position on the board
+     * @param pos represents the position on the board
+     * @return The Square at that position.
+     */
+    public Square getSquare(int pos){
+        return squares.get(pos);
+    }
+
+    /**
+     * Initializes squares on the board in the squares array. Each square has a name and board
+     * position. There are 3 types of squares: SpecialSquare, PropertySquare and CardSquare.
+     * SpecialSquares are those that have different properties to other squares.
+     * The PropertySquares have a price and colour group. CardSquares are Chance or CommunityChest
+     * cards.
+     * @see ArrayList<Square> squares
+     */
     public void initializeSquares() {
-
         squares.add(0, new SpecialSquare("Go", 0));
-
         squares.add(1, new PropertySquare("Old Kent Road", 1, 60, "Brown"));
         squares.add(2, new CardSquare("Community Chest", 2));
         squares.add(3, new PropertySquare("Whitechapel Road", 3, 50, "Brown"));
@@ -59,11 +89,6 @@ public class Board {
         squares.add(37, new PropertySquare("Park Lane", 37, 350, "Purple"));
         squares.add(38, new SpecialSquare("Super Tax", 38));
         squares.add(39, new PropertySquare("Mayfair", 39, 400, "Purple"));
-
-    }
-
-    public Square getSquare(int pos){
-        return squares.get(pos);
     }
 
 }
