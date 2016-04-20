@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     public static String PLAYER4 = "Player 4";
 
     /**
-     * int representing the number of players
+     * int representing the number of players, initialised to 2
      */
     int m_playerCount = 2;
 

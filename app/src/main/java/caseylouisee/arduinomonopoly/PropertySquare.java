@@ -62,14 +62,6 @@ public class PropertySquare extends Square {
     }
 
     /**
-     * Accessor for the property name
-     * @return m_name
-     */
-    public String getName() {
-        return NAME;
-    }
-
-    /**
      * Accessor for the property price
      * @return m_price
      */

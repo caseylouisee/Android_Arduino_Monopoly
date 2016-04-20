@@ -7,14 +7,14 @@ package caseylouisee.arduinomonopoly;
 public abstract class Square {
 
     /**
-     * String that holds the square's name
+     * CONSTANT String that holds the square's name
      */
-    String m_name;
+    private final String NAME;
 
     /**
-     * int that represents the square's position on the board
+     * CONSTANT int that represents the square's position on the board
      */
-    int m_place;
+    private final int PLACE;
 
     /**
      * Square constructor
@@ -22,8 +22,8 @@ public abstract class Square {
      * @param place The position of the square on the board
      */
     public Square(String name, int place) {
-        m_name = name;
-        m_place = place;
+        NAME = name;
+        PLACE = place;
     }
 
     /**
@@ -31,7 +31,7 @@ public abstract class Square {
      * @return m_name which is the name of the square
      */
     public String getName() {
-        return m_name;
+        return NAME;
     }
 
     /**
@@ -39,7 +39,7 @@ public abstract class Square {
      * @return m_place the location of the square on the board
      */
     public int getPlace() {
-        return m_place;
+        return PLACE;
     }
 
 }
