@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -37,6 +38,11 @@ public class MainActivity extends AppCompatActivity {
     Button btnRemovePlayer;
 
     /**
+     * CheckBox that decides whether the application manages player's funds
+     */
+    CheckBox cbxAppManagesFunds;
+
+    /**
      * Bluetooth Adapter
      */
     private BluetoothAdapter m_Bluetooth = null;
@@ -45,6 +51,11 @@ public class MainActivity extends AppCompatActivity {
      * String that holds the device mac address. Static to send through intent.
      */
     public static String EXTRA_ADDRESS = "device_address";
+
+    /**
+     * Boolean that tells app to manage funds or not
+     */
+    public static String MANAGE_FUNDS = "manage_funds_bool";
 
     /**
      * String that holds player 1's name. Static to send through intent.
@@ -84,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         btnPlay = (Button) findViewById(R.id.btnPlay);
         btnAddPlayer = (Button) findViewById(R.id.btnAddPlayer);
         btnRemovePlayer = (Button) findViewById(R.id.btnRemovePlayer);
+        cbxAppManagesFunds = (CheckBox) findViewById(R.id.cbxAppManagesFunds);
 
         //if the device has bluetooth
         m_Bluetooth = BluetoothAdapter.getDefaultAdapter();
@@ -153,6 +165,16 @@ public class MainActivity extends AppCompatActivity {
                             //Change the activity.
                             //this will be received at ledControl (class) Activity
                             i.putExtra(EXTRA_ADDRESS, address);
+
+                            Boolean manageFunds;
+
+                            if(cbxAppManagesFunds.isChecked()){
+                                manageFunds = true;
+                            } else {
+                                manageFunds = false;
+                            }
+
+                            i.putExtra(MANAGE_FUNDS, manageFunds);
 
                             EditText p1 = (EditText) findViewById(R.id.editText);
                             String player1 = p1.getText().toString();

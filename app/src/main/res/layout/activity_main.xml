@@ -97,4 +97,16 @@
         android:layout_alignEnd="@+id/btnPlay"
         android:onClick="addPlayer"/>
 
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Application Manages Funds"
+        android:id="@+id/cbxAppManagesFunds"
+        android:layout_above="@+id/btnRemovePlayer"
+        android:checked="false"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
 </RelativeLayout>
