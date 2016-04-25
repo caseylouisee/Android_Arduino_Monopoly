@@ -33,17 +33,16 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Current Position"
         android:id="@+id/currentPosition"
-        android:layout_marginTop="36dp"
-        android:layout_below="@+id/funds"
-        android:layout_alignRight="@+id/player"
-        android:layout_alignEnd="@+id/player" />
+        android:layout_above="@+id/rollResult"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="37dp" />
 
     <TextView android:text="Dice Roll"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/rollResult"
         android:textSize="50sp"
-        android:layout_below="@+id/currentPosition"
+        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
     <TextView
@@ -52,7 +51,8 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Updated Position (After Roll)"
         android:id="@+id/updatedPosition"
-        android:layout_centerVertical="true"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/rollResult"
         android:layout_centerHorizontal="true" />
 
     <TextView
@@ -61,9 +61,9 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="LocationType"
         android:id="@+id/locationType"
-        android:layout_marginTop="35dp"
         android:layout_below="@+id/updatedPosition"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="27dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -71,9 +71,8 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Recognized speech"
         android:id="@+id/recognizedSpeech"
-        android:layout_below="@+id/locationType"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="54dp" />
+        android:layout_above="@+id/btnEnd"
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"

@@ -172,7 +172,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
     /**
      * SpeechRecognizer object used to recognize input speech from players during play
      */
-    private SpeechRecognizer m_speech = null;
+    private SpeechRecognizer speech=null;
 
     /**
      * Method that converts text to speech given text using the Android TextToSpeech function.
@@ -347,7 +347,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
                     recognizedSpeech.setText("");
 
-                    if (currentPlayer.getJail() == true) {
+                    if (currentPlayer.getJail()) {
                         jailRoll(face, currentPlayer);
                     } else {
                         normalRoll(face, pos, currentPlayer);
@@ -591,7 +591,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         PropertySquare square = (PropertySquare)location;
 
         recognizedSpeech.setText("");
-        if(square.getOwned()==true){
+        if(square.getOwned()){
             convertTextToSpeech(square.getOwnedBy() + "call rent");
             //rent is subtracted and added
 
@@ -618,11 +618,12 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             convertTextToSpeech("Would you like to buy" + square.getName() + "for" + price);
 
             while (m_tts.isSpeaking()) {
-                m_speech = null;
+                speech = null;
             }
-            m_speech = SpeechRecognizer.createSpeechRecognizer(this);
-            m_speech.setRecognitionListener(this);
-            m_speech.startListening(getIntent());
+
+            speech = SpeechRecognizer.createSpeechRecognizer(this);
+            speech.setRecognitionListener(this);
+            speech.startListening(getIntent());
 
         }
     }
@@ -683,7 +684,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
         manageFunds = intent.getBooleanExtra(MainActivity.MANAGE_FUNDS,false);
 
-        if(manageFunds==true){
+        if(manageFunds){
             Log.d(method, "Application is managing funds");
         } else {
             funds = (TextView) findViewById(R.id.funds);
@@ -697,12 +698,12 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         players.add(player1);
         players.add(player2);
 
-        if(intent.getExtras().size()>3){
+        if(intent.getExtras().size()>4){
             String player3name = intent.getStringExtra(MainActivity.PLAYER3);
             Player player3 = new Player(player3name);
             players.add(player3);
         }
-        if(intent.getExtras().size()>4){
+        if(intent.getExtras().size()>5){
             String player4name = intent.getStringExtra(MainActivity.PLAYER4);
             Player player4 = new Player(player4name);
             players.add(player4);
@@ -746,7 +747,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
     @Override
     public void onInit(int code) {
         if (code==TextToSpeech.SUCCESS) {
-            m_tts.setLanguage(Locale.getDefault());
+            m_tts.setLanguage(Locale.US);
         } else {
             m_tts = null;
             msg("Failed to initialize TTS engine");
@@ -794,9 +795,9 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
     public void onError(int errorCode) {
         String errorMessage = getErrorText(errorCode);
         Log.d("SRL", "FAILED " + errorMessage);
-        m_speech = SpeechRecognizer.createSpeechRecognizer(this);
-        m_speech.setRecognitionListener(this);
-        m_speech.startListening(getIntent());
+        speech = SpeechRecognizer.createSpeechRecognizer(this);
+        speech.setRecognitionListener(this);
+        speech.startListening(getIntent());
     }
 
     @Override
@@ -842,17 +843,15 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         if (recognizedSpeech.getText().toString().contains("yes")) {
             PropertySquare square = (PropertySquare) (m_board.getSquare(
                     players.get(m_currentTurn).getCurrentPosition()));
-
             square.setOwnedBy(players.get(m_currentTurn).getName());
             convertTextToSpeech("You now own" + square.getName());
             Log.d("buyProperty yes", square.getOwnedBy());
 
-            if(manageFunds) {
+            if (manageFunds) {
                 players.get(m_currentTurn).subtractMoney(square.getPrice());
                 Log.d("buyProperty yes", players.get(m_currentTurn).getName() +
-                    String.valueOf(players.get(m_currentTurn).getMoney()));
-
-                funds.setText(String.valueOf(players.get(m_currentTurn).getMoney()));
+                        String.valueOf(players.get(m_currentTurn).getMoney()));
+                 funds.setText(String.valueOf(players.get(m_currentTurn).getMoney()));
             }
         }
         nextTurnRoll();
