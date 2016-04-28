@@ -78,6 +78,11 @@ public class MainActivity extends AppCompatActivity {
     public static String PLAYER4 = "Player 4";
 
     /**
+     * Boolean used to check if input is valid
+     */
+    private Boolean m_validInput = true;
+
+    /**
      * int representing the number of players, initialised to 2
      */
     int m_playerCount = 2;
@@ -168,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
 
                             Boolean manageFunds;
 
-                            if(cbxAppManagesFunds.isChecked()){
+                            if (cbxAppManagesFunds.isChecked()) {
                                 manageFunds = true;
                             } else {
                                 manageFunds = false;
@@ -176,27 +181,35 @@ public class MainActivity extends AppCompatActivity {
 
                             i.putExtra(MANAGE_FUNDS, manageFunds);
 
-                            EditText p1 = (EditText) findViewById(R.id.editText);
-                            String player1 = p1.getText().toString();
-                            EditText p2 = (EditText) findViewById(R.id.editText2);
-                            String player2 = p2.getText().toString();
+                            validateInput();
 
-                            i.putExtra(PLAYER1, player1);
-                            i.putExtra(PLAYER2, player2);
+                            if (m_validInput) {
+                                EditText p1 = (EditText) findViewById(R.id.editText);
+                                String player1 = p1.getText().toString();
+                                EditText p2 = (EditText) findViewById(R.id.editText2);
+                                String player2 = p2.getText().toString();
 
-                            EditText p3 = (EditText) findViewById(R.id.editText3);
-                            EditText p4 = (EditText) findViewById(R.id.editText4);
-                            if(p3.getVisibility()==View.VISIBLE) {
-                                String player3 = p3.getText().toString();
-                                i.putExtra(PLAYER3, player3);
+                                i.putExtra(PLAYER1, player1);
+                                i.putExtra(PLAYER2, player2);
+
+                                EditText p3 = (EditText) findViewById(R.id.editText3);
+                                EditText p4 = (EditText) findViewById(R.id.editText4);
+                                if (p3.getVisibility() == View.VISIBLE) {
+                                    String player3 = p3.getText().toString();
+                                    i.putExtra(PLAYER3, player3);
+                                }
+
+                                if (p4.getVisibility() == View.VISIBLE) {
+                                    String player4 = p4.getText().toString();
+                                    i.putExtra(PLAYER4, player4);
+                                }
+
+                                startActivity(i);
+                            } else {
+                                Toast.makeText(getApplicationContext(),
+                                        "Invalid input, names must be less than 10 characters",
+                                        Toast.LENGTH_LONG).show();
                             }
-
-                            if(p4.getVisibility()==View.VISIBLE){
-                                String player4 = p4.getText().toString();
-                                i.putExtra(PLAYER4, player4);
-                            }
-
-                            startActivity(i);
                         }
                     }
                 } else {
@@ -205,6 +218,45 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /**
+     * This method ensures the names input are valid. i.e. less than 10 characters
+     * @return m_validInput boolean representing if the data is valid or not
+     */
+    private Boolean validateInput(){
+        int playerCount = 0;
+
+        EditText p1 = (EditText) findViewById(R.id.editText);
+        String player1 = p1.getText().toString();
+        playerCount++;
+
+        EditText p2 = (EditText) findViewById(R.id.editText2);
+        String player2 = p2.getText().toString();
+        playerCount++;
+
+        if(player1.length()>=10 || player2.length()>=10){
+            m_validInput=false;
+        } else {
+            EditText p3 = (EditText) findViewById(R.id.editText3);
+            EditText p4 = (EditText) findViewById(R.id.editText4);
+            if (p3.getVisibility() == View.VISIBLE) {
+                String player3 = p3.getText().toString();
+                playerCount++;
+                if(player3.length()>=10){
+                    m_validInput = false;
+                } else {
+                    if (p4.getVisibility() == View.VISIBLE) {
+                        String player4 = p4.getText().toString();
+                        playerCount++;
+                        if(player4.length()>=10){
+                            m_validInput=false;
+                        }
+                    }
+                }
+            }
+        }
+        return m_validInput;
     }
 
     /**

@@ -152,7 +152,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
      * Boolean about manageFunds, true means the application manages the funds, false means the
      * application doesn't manage the funds
      */
-    private Boolean manageFunds;
+    private Boolean m_manageFunds;
 
     /**
      * int representing the number of rolls a player has had whilst in jail
@@ -173,6 +173,38 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
      * SpeechRecognizer object used to recognize input speech from players during play
      */
     private SpeechRecognizer speech=null;
+
+    /**
+     * This method is the board accessor method
+     * @return m_board which is the board initialized for game play
+     */
+    public Board getBoard(){
+        return m_board;
+    }
+
+    /**
+     * This method is the numPlayers accessor
+     * @return m_numPlayers which is the number of players in the game
+     */
+    public int getNumPlayers(){
+        return m_numPlayers;
+    }
+
+    /**
+     * This method returns who's current turn it is, represented by an int in the players array
+     * @return m_currentTurn an int representing the players position in the array
+     */
+    public int getCurrentTurn(){
+        return m_currentTurn;
+    }
+
+    /**
+     * This method is the jailCount accessor
+     * @return m_jailCount which monitors how many turns the player has been in jail for
+     */
+    public int getJailCount(){
+        return m_jailCount;
+    }
 
     /**
      * Method that converts text to speech given text using the Android TextToSpeech function.
@@ -220,7 +252,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
 
         /**
-         * Method called wehn the scan is complete.
+         * Method called when the scan is complete.
          * If no Dice+ has been located then another scan is initialised.
          */
         @Override
@@ -296,19 +328,12 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
             final int face = rolls.face;
 
-            String num = String.valueOf(face);
+            String num = String.valueOf(6);
 
-            if (btSocket!=null) {
-                try {
-                    btSocket.getOutputStream().write(("TO" + num).getBytes());
-                }
-                catch (IOException ex) {
-                    msg("Error");
-                }
-            }
+            moveMotor(num);
 
             player = (TextView) findViewById(R.id.player);
-            if(manageFunds) {
+            if(m_manageFunds) {
                 funds = (TextView) findViewById(R.id.funds);
             }
             currentPosition = (TextView) findViewById(R.id.currentPosition);
@@ -331,7 +356,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
                     Log.d(method, "Current Position:" + pos + ", " +
                             m_board.getSquare(pos).getName());
 
-                    if(manageFunds) {
+                    if(m_manageFunds) {
                         Log.d(method, "Current Funds: " + String.valueOf(currentPlayer.getMoney()));
                         funds.setText(String.valueOf(currentPlayer.getMoney()));
                     }
@@ -358,6 +383,23 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
     };
 
     /**
+     * This method is called once the dice has been rolled. It calls the correct method in the
+     * Arduino code, parsing the number the player rolled.
+     * @param num the number rolled
+     */
+    private void moveMotor(String num){
+        Log.d("moveMotor", "TO" + num);
+        if (btSocket!=null) {
+            try {
+                btSocket.getOutputStream().write(("TO" + num).getBytes());
+            }
+            catch (IOException ex) {
+                msg("Error");
+            }
+        }
+    }
+
+    /**
      * Method called if the player has resulted in a normal roll, i.e. the player is not in jail.
      * This method updates the textviews on the screen to represent the current player's
      * information.
@@ -372,9 +414,9 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
         int newPos = pos + face;
         if (newPos >= 40) {
-            currentPlayer.addMoney(200);
             convertTextToSpeech("You passed go and collected 200");
-            if(manageFunds){
+            if(m_manageFunds){
+                currentPlayer.addMoney(200);
                 funds.setText(String.valueOf(currentPlayer.getMoney()));
             }
             newPos = newPos - 40;
@@ -383,9 +425,11 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         currentPlayer.setCurrentPosition(newPos);
 
         //updatedPosition = (TextView) findViewById(R.id.updatedPosition);
-        updatedPosition.setText("Updated Position:" + newPos + ", " + m_board.getSquare(newPos).getName());
+        updatedPosition.setText("Updated Position:" + newPos + ", " +
+                m_board.getSquare(newPos).getName());
         convertTextToSpeech("You rolled a" + face);
-        convertTextToSpeech("Position after dice roll" + newPos + m_board.getSquare(newPos).getName());
+        convertTextToSpeech("Position after dice roll" + newPos +
+                m_board.getSquare(newPos).getName());
 
         locationType = (TextView) findViewById(R.id.locationType);
 
@@ -427,7 +471,8 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             m_jailCount++;
             if(m_jailCount==3){
                 currentPlayer.setJail(false);
-                convertTextToSpeech("You have served your sentence. Resume normal play on next turn");
+                convertTextToSpeech("You have served your sentence. " +
+                        "Resume normal play on next turn");
             }
             nextTurnRoll();
         }
@@ -453,8 +498,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             setJail(currentPlayer);
             nextTurnRoll();
         } else if (locName.equals("Income Tax")){
-
-            if(manageFunds) {
+            if(m_manageFunds) {
                 currentPlayer.subtractMoney(100);
                 funds.setText(String.valueOf(currentPlayer.getMoney()));
                 convertTextToSpeech("100 has been deducted from your funds");
@@ -470,8 +514,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             convertTextToSpeech("Just visiting");
             nextTurnRoll();
         } else if (locName.equals("Super Tax")){
-
-            if(manageFunds) {
+            if(m_manageFunds) {
                 convertTextToSpeech("300 has been deducted from your funds");
                 currentPlayer.subtractMoney(300);
                 funds.setText(String.valueOf(currentPlayer.getMoney()));
@@ -507,8 +550,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
         if(randomNum == 3){
             convertTextToSpeech("Build a rooftop swimming pool on your apartment, pay 300");
-
-            if(manageFunds) {
+            if(m_manageFunds) {
                 currentPlayer.subtractMoney(300);
                 funds.setText(String.valueOf(currentPlayer.getMoney()));
                 m_freeParking += 300;
@@ -535,8 +577,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
         if(randomNum == 1){
             convertTextToSpeech("Your new business takes off, collect 200");
-
-            if(manageFunds) {
+            if(m_manageFunds) {
                 Log.d("chance add 200", currentPlayer.getName() +
                         String.valueOf(currentPlayer.getMoney()));
                 currentPlayer.addMoney(200);
@@ -548,8 +589,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         if(randomNum == 2){
             convertTextToSpeech("Your friend hires your villa for a week, " +
                     "collect 100 off the next player");
-
-            if(manageFunds) {
+            if(m_manageFunds) {
                 Log.d("chance add 100", currentPlayer.getName() +
                         String.valueOf(currentPlayer.getMoney()));
                 currentPlayer.addMoney(100);
@@ -566,8 +606,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
         if(randomNum == 3){
             convertTextToSpeech("You receive a tax rebate, collect 300");
-
-            if(manageFunds) {
+            if(m_manageFunds) {
                 Log.d("chance add 300", currentPlayer.getName() +
                         String.valueOf(currentPlayer.getMoney()));
                 currentPlayer.addMoney(300);
@@ -595,13 +634,11 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             convertTextToSpeech(square.getOwnedBy() + "call rent");
             //rent is subtracted and added
 
-            if(manageFunds) {
+            if(m_manageFunds) {
                 currentPlayer.subtractMoney(100);
                 funds.setText(String.valueOf(currentPlayer.getMoney()));
-
                 Log.d(method + "rent subtract money", currentPlayer.getName() +
                         String.valueOf(currentPlayer.getMoney()));
-
                 String owner = square.getOwnedBy();
                 for (int i = 0; i < m_numPlayers; i++) {
                     if (players.get(i).getName().equals(owner)) {
@@ -652,7 +689,8 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         m_tts = new TextToSpeech(this, this);
 
         Intent newint = getIntent();
-        address = newint.getStringExtra(MainActivity.EXTRA_ADDRESS); //receive the address of the bluetooth device
+        //receive the address of the bluetooth device
+        address = newint.getStringExtra(MainActivity.EXTRA_ADDRESS);
 
         //view of the ledControl
         setContentView(R.layout.activity_game_play);
@@ -682,9 +720,9 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
         Intent intent = getIntent();
 
-        manageFunds = intent.getBooleanExtra(MainActivity.MANAGE_FUNDS,false);
+        m_manageFunds = intent.getBooleanExtra(MainActivity.MANAGE_FUNDS,false);
 
-        if(manageFunds){
+        if(m_manageFunds){
             Log.d(method, "Application is managing funds");
         } else {
             funds = (TextView) findViewById(R.id.funds);
@@ -847,7 +885,7 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             convertTextToSpeech("You now own" + square.getName());
             Log.d("buyProperty yes", square.getOwnedBy());
 
-            if (manageFunds) {
+            if (m_manageFunds) {
                 players.get(m_currentTurn).subtractMoney(square.getPrice());
                 Log.d("buyProperty yes", players.get(m_currentTurn).getName() +
                         String.valueOf(players.get(m_currentTurn).getMoney()));
@@ -913,7 +951,6 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         Log.d(TAG, "onResume");
 
         game();
-        //Game game = new Game();
     }
 
     /**
@@ -947,36 +984,6 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
         }
         finish(); //return to the first layout
 
-    }
-
-    /**
-     * This method sends a message to the arduino via bluetooth which in turn,
-     * turns off the LED light on the Arduino
-     */
-    private void turnOffLed() {
-        if (btSocket!=null) {
-            try {
-                btSocket.getOutputStream().write("TF".getBytes());
-            }
-            catch (IOException e) {
-                msg("Error");
-            }
-        }
-    }
-
-    /**
-     * This method sends a message to the bluetooth device (Arduino), which in turn, turns on the
-     * LED light.
-     */
-    private void turnOnLed() {
-        if (btSocket!=null) {
-            try {
-                btSocket.getOutputStream().write("TO".getBytes());
-            }
-            catch (IOException e) {
-                msg("Error");
-            }
-        }
     }
 
     /**

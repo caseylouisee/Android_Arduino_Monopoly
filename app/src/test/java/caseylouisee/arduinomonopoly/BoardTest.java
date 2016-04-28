@@ -21,4 +21,15 @@ public class BoardTest {
         assertTrue(board.getSquare(0).getName().equals("Go"));
     }
 
+    /**
+     * This test checks that the board "getSquares" method doesn't return null. This means that the
+     * squares arrayList has therefore been initialized.
+     * @throws Exception
+     */
+    @Test
+    public void get_squares_test() throws Exception {
+        Board board = new Board();
+        assertNotNull(board.getSquares());
+    }
+
 }
