@@ -207,8 +207,10 @@ public class MainActivity extends AppCompatActivity {
                                 startActivity(i);
                             } else {
                                 Toast.makeText(getApplicationContext(),
-                                        "Invalid input, names must be less than 10 characters",
+                                        "Invalid input, names must be more than 2 " +
+                                                "and less than 15 characters",
                                         Toast.LENGTH_LONG).show();
+                                m_validInput = true;
                             }
                         }
                     }
@@ -235,7 +237,8 @@ public class MainActivity extends AppCompatActivity {
         String player2 = p2.getText().toString();
         playerCount++;
 
-        if(player1.length()>=10 || player2.length()>=10){
+        if(player1.length()>=15 || player2.length()>=15 ||
+                player1.length()<2 || player2.length()<2){
             m_validInput=false;
         } else {
             EditText p3 = (EditText) findViewById(R.id.editText3);
@@ -243,13 +246,13 @@ public class MainActivity extends AppCompatActivity {
             if (p3.getVisibility() == View.VISIBLE) {
                 String player3 = p3.getText().toString();
                 playerCount++;
-                if(player3.length()>=10){
+                if(player3.length()>=15 || player3.length()<2){
                     m_validInput = false;
                 } else {
                     if (p4.getVisibility() == View.VISIBLE) {
                         String player4 = p4.getText().toString();
                         playerCount++;
-                        if(player4.length()>=10){
+                        if(player4.length()>=15 || player4.length()<2){
                             m_validInput=false;
                         }
                     }

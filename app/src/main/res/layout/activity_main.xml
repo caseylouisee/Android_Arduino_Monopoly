@@ -12,7 +12,8 @@
         android:id="@+id/textView"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:textSize="28dp" />
 
     <Button
         android:layout_width="wrap_content"
@@ -23,7 +24,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:textSize="25dp" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -36,7 +38,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignRight="@+id/editText2"
-        android:layout_alignEnd="@+id/editText2" />
+        android:layout_alignEnd="@+id/editText2"
+        android:textSize="28dp" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -47,7 +50,8 @@
         android:id="@+id/editText2"
         android:layout_below="@+id/editText"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:textSize="28dp" />
 
     <EditText
         android:visibility="gone"
@@ -59,7 +63,8 @@
         android:id="@+id/editText3"
         android:layout_below="@+id/editText2"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:textSize="28dp" />
 
     <EditText
         android:visibility="gone"
@@ -71,7 +76,8 @@
         android:id="@+id/editText4"
         android:layout_below="@+id/editText3"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:textSize="28dp" />
 
     <Button
         android:layout_width="wrap_content"
@@ -83,7 +89,8 @@
         android:layout_alignParentStart="true"
         android:layout_alignRight="@+id/btnPlay"
         android:layout_alignEnd="@+id/btnPlay"
-        android:onClick="removePlayer"/>
+        android:onClick="removePlayer"
+        android:textSize="25dp" />
 
     <Button
         android:layout_width="wrap_content"
@@ -95,7 +102,8 @@
         android:layout_alignParentStart="true"
         android:layout_alignRight="@+id/btnPlay"
         android:layout_alignEnd="@+id/btnPlay"
-        android:onClick="addPlayer"/>
+        android:onClick="addPlayer"
+        android:textSize="25dp" />
 
     <CheckBox
         android:layout_width="wrap_content"
@@ -108,6 +116,6 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:textSize="20dp" />
+        android:textSize="25dp" />
 
 </RelativeLayout>

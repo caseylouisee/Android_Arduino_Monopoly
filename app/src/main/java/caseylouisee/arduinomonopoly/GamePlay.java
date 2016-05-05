@@ -328,9 +328,13 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
 
             final int face = rolls.face;
 
-            String num = String.valueOf(6);
+            Player currentPlayer = players.get(m_currentTurn);
+            int pos = currentPlayer.getCurrentPosition();
 
-            moveMotor(num);
+            if(pos+face <= 8){
+                String number = String.valueOf(pos+face);
+                moveMotor(number);
+            }
 
             player = (TextView) findViewById(R.id.player);
             if(m_manageFunds) {
@@ -878,7 +882,31 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
             text += result + "\n";
         recognizedSpeech.setText(text);
 
-        if (recognizedSpeech.getText().toString().contains("yes")) {
+        if(!(recognizedSpeech.getText().toString().contains("yes")) &&
+                !(recognizedSpeech.getText().toString().contains("no"))){
+            convertTextToSpeech("A valid response was not detected, please try again.");
+
+            while (m_tts.isSpeaking()) {
+                speech = null;
+            }
+
+            speech = SpeechRecognizer.createSpeechRecognizer(this);
+            speech.setRecognitionListener(this);
+            speech.startListening(getIntent());
+
+        } else if(recognizedSpeech.getText().toString().contains("yes") &&
+                recognizedSpeech.getText().toString().contains("no")){
+            convertTextToSpeech("Both yes and no were detected, please only specify one decision");
+
+            while (m_tts.isSpeaking()) {
+                speech = null;
+            }
+
+            speech = SpeechRecognizer.createSpeechRecognizer(this);
+            speech.setRecognitionListener(this);
+            speech.startListening(getIntent());
+
+        } else if (recognizedSpeech.getText().toString().contains("yes")) {
             PropertySquare square = (PropertySquare) (m_board.getSquare(
                     players.get(m_currentTurn).getCurrentPosition()));
             square.setOwnedBy(players.get(m_currentTurn).getName());
@@ -891,8 +919,10 @@ public class GamePlay extends AppCompatActivity implements TextToSpeech.OnInitLi
                         String.valueOf(players.get(m_currentTurn).getMoney()));
                  funds.setText(String.valueOf(players.get(m_currentTurn).getMoney()));
             }
+            nextTurnRoll();
+        } else if (recognizedSpeech.getText().toString().contains("no")) {
+            nextTurnRoll();
         }
-        nextTurnRoll();
     }
 
     @Override
